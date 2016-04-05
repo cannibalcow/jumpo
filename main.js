@@ -35,9 +35,9 @@ Jumpo.GameState.prototype = {
     this.multiplierTimer = this.time.events.loop(1000, this.incrementMultiplier, this);
 
     // Highscore
-    this.highScoreText = this.add.text(650, 20, "0", { font: "1.8em Arial", fill: "#ffffff" });
-    this.lastScoreText = this.add.text(650, 40, "0", { font: "1.8em Arial", fill: "#ffffff" });
-    this.multiplierText = this.add.text(650, 60, "0", { font: "1.8em Arial", fill: "#ffffff" });
+    this.highScoreText = this.add.text(666, 20, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
+    this.lastScoreText = this.add.text(666, 40, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
+    this.multiplierText = this.add.text(666, 60, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4  });
     // controls
     this.cursor = this.input.keyboard.createCursorKeys();
   },
@@ -141,7 +141,7 @@ Jumpo.GameTitle.prototype = {
     this.title = this.add.text(this.world.centerX, this.world.centerY - 150, "0", { font: "4em Arial Black", fill: "#000000", align: "center"} );
     this.title.anchor.setTo(0.5, 0.5);
     this.title.text = "Jumpo the pirate!";
-    this.help = this.add.text(this.world.centerX, this.world.centerY, "0", { font: "2.5em Arial Black", fill: "#ffffff", align: "center" });
+    this.help = this.add.text(this.world.centerX, this.world.centerY, "0", { font: "2.5em Arial Black", fill: "#ffffff", align: "center", stroke: "#000000", strokeThickness: 4 });
     this.help.anchor.setTo(0.5, 0.5);
     this.help.text = "Use the arrowkeys to move and jump\n Get as far to the right\n\nPress any key to start"
   },
@@ -160,7 +160,7 @@ PRE LOAD STATE
 */
 Jumpo.PreloadState.prototype = {
   preload: function() {
-    this.info = this.add.text(this.world.centerX - 150, this.world.centerY - 80, "0", { font: "4.0em Arial Black", fill: "#ffffff" });
+    this.info = this.add.text(this.world.centerX - 150, this.world.centerY - 80, "0", { font: "4.0em Arial Black", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
     this.info.text = "Loading junk...";
     var loadingBar = this.add.sprite(this.world.width/2,this.world.height/2,"loading");
     loadingBar.scale.x = 2;
