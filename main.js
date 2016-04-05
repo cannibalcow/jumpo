@@ -6,19 +6,12 @@ Jumpo.PreloadState = function() {};
 
 Jumpo.GameState.prototype = {
   highScore: 0,
+  lastScore: 0,
   preload: function() {
-      // this.load.image('platform', 'assets/platform.png');
-      // this.load.image('hero', 'assets/hero.png');
-      // this.load.image('background', 'assets/bg.png');
-      // this.load.audio('jump', 'assets/jump.wav');
-      // this.load.audio('music', 'assets/music.wav');
-      this.input.keyboard.onDownCallback = function(e) {
-      }
+      // reset onDownCallback
+      this.input.keyboard.onDownCallback = function(e) {}
   },
   create: function() {
-
-    // this.stage.backgroundColor = '#71c5cf';
-
     this.physics.startSystem(Phaser.Physics.ARCADE);
 
     // background
@@ -40,6 +33,7 @@ Jumpo.GameState.prototype = {
 
     // Highscore
     this.highScoreText = this.add.text(650, 20, "0", { font: "1.8em Arial", fill: "#ffffff" });
+    this.lastScoreText = this.add.text(650, 40, "0", { font: "1.8em Arial", fill: "#ffffff" });
 
     // controls
     this.cursor = this.input.keyboard.createCursorKeys();
@@ -50,6 +44,8 @@ Jumpo.GameState.prototype = {
   },
   render: function() {
     this.highScoreText.text = "Highscore: " + this.highScore;
+    this.lastScoreText.text = "Last: " + this.lastScore;
+
   },
   addRandomPlatform: function() {
     var y = this.rnd.integerInRange(0, 9) * 64;
@@ -72,6 +68,7 @@ Jumpo.GameState.prototype = {
 
     if(this.hero.y > this.game.height && this.hero.alive) {
       var score = Math.floor(this.hero.x);
+      this.lastScore = score;
       if(score > this.highScore) {
         this.highScore = score;
       }
