@@ -143,7 +143,7 @@ Jumpo.GameTitle.prototype = {
     this.title.text = "Jumpo the pirate!";
     this.help = this.add.text(this.world.centerX, this.world.centerY, "0", { font: "2.5em Arial Black", fill: "#ffffff", align: "center" });
     this.help.anchor.setTo(0.5, 0.5);
-    this.help.text = "User arrowkeys to move and jump\n Get as far to the right as possible\n\nPress any key to start"
+    this.help.text = "Use the arrowkeys to move and jump\n Get as far to the right\n\nPress any key to start"
   },
   create: function() {
     this.input.keyboard.onDownCallback = function(e) {
