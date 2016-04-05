@@ -7,6 +7,7 @@ Jumpo.PreloadState = function() {};
 Jumpo.GameState.prototype = {
   highScore: 0,
   lastScore: 0,
+  multiplier: 0,
   preload: function() {
       // reset onDownCallback
       this.input.keyboard.onDownCallback = function(e) {}
@@ -24,17 +25,19 @@ Jumpo.GameState.prototype = {
     this.jumpSound = this.add.audio('jump');
     this.music = this.add.audio('music');
     this.music.loop = true;
-    // this.music.play();
+    this.music.play();
+
     // Groups
     this.platformsCreate();
 
     // Timers
     this.platformTimer = this.time.events.loop(400, this.addRandomPlatform, this);
+    this.multiplierTimer = this.time.events.loop(1000, this.incrementMultiplier, this);
 
     // Highscore
     this.highScoreText = this.add.text(650, 20, "0", { font: "1.8em Arial", fill: "#ffffff" });
     this.lastScoreText = this.add.text(650, 40, "0", { font: "1.8em Arial", fill: "#ffffff" });
-
+    this.multiplierText = this.add.text(650, 60, "0", { font: "1.8em Arial", fill: "#ffffff" });
     // controls
     this.cursor = this.input.keyboard.createCursorKeys();
   },
@@ -45,11 +48,7 @@ Jumpo.GameState.prototype = {
   render: function() {
     this.highScoreText.text = "Highscore: " + this.highScore;
     this.lastScoreText.text = "Last: " + this.lastScore;
-
-  },
-  addRandomPlatform: function() {
-    var y = this.rnd.integerInRange(0, 9) * 64;
-    this.platformsCreateOne(800, y, -380);
+    this.multiplierText.text = "Multiplier: " + this.multiplier;
   },
   heroMove: function() {
     if(this.cursor.left.isDown) {
@@ -62,12 +61,12 @@ Jumpo.GameState.prototype = {
 
     if(this.cursor.up.isDown && this.hero.body.touching.down) {
       this.jumpSound.play();
-      this.add.tween(this.hero).to({angle: -365}, 350).start();
+      this.add.tween(this.hero).to({angle: 365}, 350).start();
       this.hero.body.velocity.y = -500;
     }
 
-    if(this.hero.y > this.game.height && this.hero.alive) {
-      var score = Math.floor(this.hero.x);
+    if((this.hero.y > this.game.height || this.hero.x <= -32 ) && this.hero.alive) {
+      var score = Math.floor(this.hero.x) * this.multiplier;
       this.lastScore = score;
       if(score > this.highScore) {
         this.highScore = score;
@@ -75,16 +74,20 @@ Jumpo.GameState.prototype = {
       this.resetGame();
     }
   },
+  incrementMultiplier: function() {
+    this.multiplier = this.multiplier + 1;
+  },
   resetGame: function() {
+    this.multiplier = 0;
     this.hero.x = 40;
     this.hero.y = 20;
     var y = this.rnd.integerInRange(0, 9) * 64;
     this.platforms.forEach(function(p, i){
         if(p.body.velocity.x == -20) {
-          p.destroy();
+          p.kill();
         }
     });
-    this.platformsCreateOne(0, y, -20);
+    this.platforms.add(this.platformsCreateOne(0, y, -20));
   },
   heroCreate: function() {
     this.hero = this.add.sprite(40, 20, 'hero');
@@ -108,10 +111,18 @@ Jumpo.GameState.prototype = {
     this.platforms = this.add.group();
     this.platforms.enableBody = true;
     this.platforms.createMultiple(20, 'platform');
-    this.platformsCreateOne(0, 64, -20);
-  }
+    this.platforms.add(this.platformsCreateOne(0, 64, -20), true);
+  },
+  addRandomPlatform: function() {
+    var y = this.rnd.integerInRange(0, 9) * 64;
+    var platform = this.platformsCreateOne(800, y, -380);
+    this.platforms.add(platform, true);
+  },
 };
 
+/**
+  BOOT state
+*/
 Jumpo.Boot.prototype = {
   preload: function() {
     this.load.image("loading", "assets/loading.png");
@@ -122,6 +133,9 @@ Jumpo.Boot.prototype = {
   }
 };
 
+/**
+ GAME TITLE STATE
+*/
 Jumpo.GameTitle.prototype = {
   preload: function() {
     this.title = this.add.text(this.world.centerX, this.world.centerY - 150, "0", { font: "4em Arial Black", fill: "#000000", align: "center"} );
@@ -141,6 +155,9 @@ Jumpo.GameTitle.prototype = {
   }
 };
 
+/**
+PRE LOAD STATE
+*/
 Jumpo.PreloadState.prototype = {
   preload: function() {
     this.info = this.add.text(this.world.centerX - 150, this.world.centerY - 80, "0", { font: "4.0em Arial Black", fill: "#ffffff" });
