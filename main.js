@@ -1,20 +1,23 @@
 var Jumpo = function() {};
 Jumpo.GameState = function() {};
+Jumpo.GameTitle = function() {};
+Jumpo.Boot = function() {};
+Jumpo.PreloadState = function() {};
 
 Jumpo.GameState.prototype = {
   highScore: 0,
   preload: function() {
-      this.load.image('platform', 'assets/platform.png');
-      this.load.image('hero', 'assets/hero.png');
-      this.load.image('background', 'assets/bg.png');
-      this.load.audio('jump', 'assets/jump.wav');
-      this.load.audio('music', 'assets/music.wav');
-
+      // this.load.image('platform', 'assets/platform.png');
+      // this.load.image('hero', 'assets/hero.png');
+      // this.load.image('background', 'assets/bg.png');
+      // this.load.audio('jump', 'assets/jump.wav');
+      // this.load.audio('music', 'assets/music.wav');
+      this.input.keyboard.onDownCallback = function(e) {
+      }
   },
   create: function() {
-    this.info = this.add.text(this.world.centerX/4, this.world.centerY/2, "0", { font: "2.0em Arial", fill: "#ffffff" });
-    this.info.text = "Press space or tap to start";
-    this.stage.backgroundColor = '#71c5cf';
+
+    // this.stage.backgroundColor = '#71c5cf';
 
     this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -112,11 +115,62 @@ Jumpo.GameState.prototype = {
   }
 };
 
+Jumpo.Boot.prototype = {
+  preload: function() {
+    this.load.image("loading", "assets/loading.png");
+  },
+  create: function() {
+    this.stage.backgroundColor = '#79C5FF';
+    this.game.state.start("Preload");
+  }
+};
 
+Jumpo.GameTitle.prototype = {
+  preload: function() {
+    this.title = this.add.text(this.world.centerX, this.world.centerY - 150, "0", { font: "4em Arial Black", fill: "#000000", align: "center"} );
+    this.title.anchor.setTo(0.5, 0.5);
+    this.title.text = "Jumpo the pirate!";
+    this.help = this.add.text(this.world.centerX, this.world.centerY, "0", { font: "2.5em Arial Black", fill: "#ffffff", align: "center" });
+    this.help.anchor.setTo(0.5, 0.5);
+    this.help.text = "User arrowkeys to move and jump\n Get as far to the right as possible\n\nPress any key to start"
+  },
+  create: function() {
+    this.input.keyboard.onDownCallback = function(e) {
+      this.game.state.start("Game");
+    }
+  },
+  render: function() {
 
+  }
+};
+
+Jumpo.PreloadState.prototype = {
+  preload: function() {
+    this.info = this.add.text(this.world.centerX - 150, this.world.centerY - 80, "0", { font: "4.0em Arial Black", fill: "#ffffff" });
+    this.info.text = "Loading junk...";
+    var loadingBar = this.add.sprite(this.world.width/2,this.world.height/2,"loading");
+    loadingBar.scale.x = 2;
+    loadingBar.anchor.setTo(0.5,0.5);
+    this.load.setPreloadSprite(loadingBar);
+    this.load.image('platform', 'assets/platform.png');
+    this.load.image('hero', 'assets/hero.png');
+    this.load.image('background', 'assets/bg.png');
+    this.load.audio('jump', 'assets/jump.wav');
+    this.load.audio('music', 'assets/music.wav');
+  },
+  create: function() {
+    this.game.state.start('GameTitle');
+  },
+  render: function() {
+
+  }
+};
 
 window.onload = function() {
     var game = new Phaser.Game(800, 600, Phaser.AUTO, 'jumpo-content');
-    game.state.add('game', Jumpo.GameState);
-    game.state.start('game');
+    game.state.add('Boot', Jumpo.Boot);
+    game.state.add('Preload', Jumpo.PreloadState);
+    game.state.add('GameTitle', Jumpo.GameTitle);
+    game.state.add('Game', Jumpo.GameState);
+    game.state.start('Boot');
 };
