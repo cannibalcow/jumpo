@@ -8,6 +8,9 @@ Jumpo.GameState.prototype = {
   highScore: 0,
   lastScore: 0,
   multiplier: 0,
+  jumps: 0,
+  velocity: 200,
+  jumpSpeed: 500,
   preload: function() {
       // reset onDownCallback
       this.input.keyboard.onDownCallback = function(e) {}
@@ -35,36 +38,73 @@ Jumpo.GameState.prototype = {
     this.multiplierTimer = this.time.events.loop(1000, this.incrementMultiplier, this);
 
     // Highscore
-    this.highScoreText = this.add.text(666, 20, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
-    this.lastScoreText = this.add.text(666, 40, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
-    this.multiplierText = this.add.text(666, 60, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4  });
+    this.highScoreText = this.add.text(650, 20, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
+    this.lastScoreText = this.add.text(650, 40, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4 });
+    this.multiplierText = this.add.text(650, 60, "0", { font: "1.8em Arial", fill: "#ffffff", stroke: "#000000", strokeThickness: 4  });
+
     // controls
-    this.cursor = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.addKeyCapture([
+        Phaser.Keyboard.LEFT,
+        Phaser.Keyboard.RIGHT,
+        Phaser.Keyboard.UP,
+        Phaser.Keyboard.DOWN,
+        Phaser.Keyboard.M
+    ]);
   },
   update: function() {
     this.physics.arcade.collide(this.hero, this.platforms);
     this.heroMove();
+
+    /**
+    Toggle music
+    **/
+    if(this.mInputIsActive()) {
+      if(this.music.isPlaying) {
+        this.music.pause();
+      } else {
+        this.music.play();
+      }
+    }
   },
   render: function() {
     this.highScoreText.text = "Highscore: " + this.highScore;
     this.lastScoreText.text = "Last: " + this.lastScore;
-    this.multiplierText.text = "Multiplier: " + this.multiplier;
+    this.multiplierText.text = "Current: " + this.multiplier + " * " + Math.floor(this.hero.x);
   },
   heroMove: function() {
-    if(this.cursor.left.isDown) {
-      this.hero.body.velocity.x = -200;
-    } else if(this.cursor.right.isDown){
-      this.hero.body.velocity.x = 200;
+    if (this.leftInputIsActive()) {
+      this.hero.body.velocity.x = -this.velocity;
+    } else if (this.rightInputIsActive()) {
+      this.hero.body.velocity.x = this.velocity;
     } else {
       this.hero.body.velocity.x = 0;
     }
 
-    if(this.cursor.up.isDown && this.hero.body.touching.down) {
-      this.jumpSound.play();
-      this.add.tween(this.hero).to({angle: 365}, 350).start();
-      this.hero.body.velocity.y = -500;
+    /**
+    Jumping
+    **/
+    var onTheGround = this.hero.body.touching.down;
+
+    if (onTheGround) {
+      this.jumps = 2;
+      this.jumping = false;
     }
 
+    if (this.jumps > 0 && this.upInputIsActive(5)) {
+      this.jumpSound.play();
+      this.add.tween(this.hero).to({angle: 360}, 350).start();
+      this.hero.body.velocity.y = -this.jumpSpeed;
+      this.jumping = true;
+    }
+
+    if (this.jumping && this.upInputReleased()) {
+      this.jumps--;
+      this.jumping = false;
+    }
+
+    /**
+    Check if dead
+    **/
     if((this.hero.y > this.game.height || this.hero.x <= -32 ) && this.hero.alive) {
       var score = Math.floor(this.hero.x) * this.multiplier;
       this.lastScore = score;
@@ -73,6 +113,37 @@ Jumpo.GameState.prototype = {
       }
       this.resetGame();
     }
+  },
+  mInputIsActive: function() {
+      var isActive = false;
+      isActive = this.input.keyboard.isDown(Phaser.Keyboard.M);
+      return isActive;
+  },
+  leftInputIsActive: function() {
+      var isActive = false;
+      isActive = this.input.keyboard.isDown(Phaser.Keyboard.LEFT);
+      isActive |= (this.game.input.activePointer.isDown && this.game.input.activePointer.x < this.game.width/4);
+      return isActive;
+  },
+  rightInputIsActive: function() {
+      var isActive = false;
+      isActive = this.input.keyboard.isDown(Phaser.Keyboard.RIGHT);
+      isActive |= (this.game.input.activePointer.isDown && this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+      return isActive;
+  },
+  upInputIsActive: function(duration) {
+      var isActive = false;
+      isActive = this.input.keyboard.downDuration(Phaser.Keyboard.UP, duration);
+      isActive |= (this.game.input.activePointer.justPressed(duration + 1000/60) &&
+          this.game.input.activePointer.x > this.game.width/4 &&
+          this.game.input.activePointer.x < this.game.width/2 + this.game.width/4);
+      return isActive;
+  },
+  upInputReleased: function() {
+      var released = false;
+      released = this.input.keyboard.upDuration(Phaser.Keyboard.UP);
+      released |= this.game.input.activePointer.justReleased();
+      return released;
   },
   incrementMultiplier: function() {
     this.multiplier = this.multiplier + 1;
@@ -114,7 +185,7 @@ Jumpo.GameState.prototype = {
     this.platforms.add(this.platformsCreateOne(0, 64, -20), true);
   },
   addRandomPlatform: function() {
-    var y = this.rnd.integerInRange(0, 9) * 64;
+    var y = this.rnd.integerInRange(1, 9) * 64;
     var platform = this.platformsCreateOne(800, y, -380);
     this.platforms.add(platform, true);
   },
@@ -138,12 +209,15 @@ Jumpo.Boot.prototype = {
 */
 Jumpo.GameTitle.prototype = {
   preload: function() {
-    this.title = this.add.text(this.world.centerX, this.world.centerY - 150, "0", { font: "4em Arial Black", fill: "#000000", align: "center"} );
+    this.title = this.add.text(this.world.centerX, this.world.centerY - 200, "0", { font: "4.3em Arial Black", fill: "#000000", align: "center"} );
     this.title.anchor.setTo(0.5, 0.5);
     this.title.text = "Jumpo the pirate!";
+    this.contact = this.add.text(this.world.centerX, this.world.centerY - 150, "0", { font: "2em Arial Black", fill: "#000000", align: "center"} );
+    this.contact.anchor.setTo(0.5, 0.5);
+    this.contact.text = "by @utbrand (I googled all the gfx)";
     this.help = this.add.text(this.world.centerX, this.world.centerY, "0", { font: "2.5em Arial Black", fill: "#ffffff", align: "center", stroke: "#000000", strokeThickness: 4 });
     this.help.anchor.setTo(0.5, 0.5);
-    this.help.text = "Use the arrowkeys to move and jump\n Get as far to the right\n\nPress any key to start"
+    this.help.text = "Use the arrowkeys to move and jump\n To score?\n It matters where you die and when you do...\n\nPress any key to start"
   },
   create: function() {
     this.input.keyboard.onDownCallback = function(e) {
@@ -151,7 +225,6 @@ Jumpo.GameTitle.prototype = {
     }
   },
   render: function() {
-
   }
 };
 
@@ -176,7 +249,6 @@ Jumpo.PreloadState.prototype = {
     this.game.state.start('GameTitle');
   },
   render: function() {
-
   }
 };
 
